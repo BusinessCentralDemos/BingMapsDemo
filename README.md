@@ -1,7 +1,7 @@
 # BingMaps Demo
 This Demo consists of lirum larum
 
-If you encounter issues with the Demo, please create an issue at [here](https://github.com/BusinessCentralDemos/BingMapsDemo/Issues)
+If you encounter issues with the Demo, please create an issue at [here](https://github.com/BusinessCentralDemos/BingMapsDemo/issues)
 
 ## Demo storyboard
 The quick brown fox jumps over the lazy dog
