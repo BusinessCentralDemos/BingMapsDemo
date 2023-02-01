@@ -76,14 +76,15 @@ jobs:
             Write-Host "AdminCenterApiCredentials not provided, initiating Device Code flow"
             $ALGoHelperPath = "$([System.IO.Path]::GetTempFileName()).ps1"
             $webClient = New-Object System.Net.WebClient
-            $webClient.DownloadFile('https://raw.githubusercontent.com/microsoft/AL-Go-Actions/preview/AL-Go-Helper.ps1', $ALGoHelperPath)
+            $webClient.DownloadFile('https://raw.githubusercontent.com/freddydk/AL-Go-Actions/main/AL-Go-Helper.ps1', $ALGoHelperPath)
             . $ALGoHelperPath
             $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
             $authContext = New-BcAuthContext -includeDeviceLogin -deviceLoginTimeout ([TimeSpan]::FromSeconds(0))
             $adminCenterApiCredentials = "{""deviceCode"":""$($authContext.deviceCode)""}"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "adminCenterApiCredentials=$([Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($adminCenterApiCredentials)))"
+            MaskValueInLog -value $($authContext.deviceCode)
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
-            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "Please open the page https://microsoft.com/devicelogin, specify the code $($authContext.deviceCode) and login with your Business Central Admin Center Credentials"
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value $authContext.message
           }
 
   CreateDevelopmentEnvironment:
@@ -91,7 +92,7 @@ jobs:
     name: Create Development Environment
     needs: [ Authentication ]
     env:
-      adminCenterApiCredentials: 
+      adminCenterApiCredentials: ${{ needs.Authentication.outputs.adminCenterApiCredentials }}
     steps:
       - name: Create Development Environment
         uses: microsoft/AL-Go-Actions/CreateDevelopmentEnvironment@preview
