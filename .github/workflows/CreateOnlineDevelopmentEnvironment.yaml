@@ -80,11 +80,10 @@ jobs:
             . $ALGoHelperPath
             $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
             $authContext = New-BcAuthContext -includeDeviceLogin -deviceLoginTimeout ([TimeSpan]::FromSeconds(0))
-            MaskValueInLog -value $authContext.deviceCode
             $adminCenterApiCredentials = "{""deviceCode"":""$($authContext.deviceCode)""}"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "adminCenterApiCredentials=$([Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($adminCenterApiCredentials)))"
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
-            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value 'Please open https://aka.ms/devicelogin, specify the code $($authContext.deviceCode) and login with your Business Central Admin Center Credentials'
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "Please open the page https://microsoft.com/devicelogin, specify the code $($authContext.deviceCode) and login with your Business Central Admin Center Credentials"
           }
 
   CreateDevelopmentEnvironment:
