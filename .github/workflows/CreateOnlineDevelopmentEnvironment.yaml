@@ -15,7 +15,7 @@ on:
         required: false
         default: 'N'
 
-run-name: ${{ secrets.adminCenterApiCredentials == '' && 'Create Online Development Environment' || 'Create Online Development Environment - open to see if manual intervention is needed' }}
+run-name: Create Online Development Environment - open to see if manual intervention is needed
 
 permissions:
   contents: write
