@@ -168,6 +168,7 @@ jobs:
           else {
             $deployToSetting = [PSCustomObject]@{}
           }
+          $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
           $authContext = $null
           if ($env:singleAuthContext -and $env:encryptionKeyStr) {
             $encryptionKey = [System.Convert]::FromBase64String($encryptionKeyStr)
