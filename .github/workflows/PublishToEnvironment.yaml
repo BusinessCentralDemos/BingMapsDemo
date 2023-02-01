@@ -35,7 +35,6 @@ jobs:
       settings: ${{ steps.ReadSettings.outputs.SettingsJson }}
       environments: ${{ steps.ReadSettings.outputs.EnvironmentsJson }}
       environmentCount: ${{ steps.ReadSettings.outputs.EnvironmentCount }}
-      runCICD: ${{ steps.Authenticate.outputs.runCICD }}
       singleAuthContext: ${{ steps.Authenticate.outputs.singleAuthContext }}
     steps:
       - name: Checkout
@@ -116,15 +115,9 @@ jobs:
           $encStr = ConvertFrom-SecureString -SecureString $secStr -Key $encryptionKey
           Add-Content -Path $env:GITHUB_OUTPUT -Value "singleAuthContext=$encStr"
 
-  CICD:
-    needs: [ Initialization ]
-    if: needs.Initialization.outputs.runCICD == 'true'
-    uses: BusinessCentralDemos/BingMapsDemo/.github/workflows/CICD.yaml@main
-    secrets: inherit
-
   Deploy:
-    needs: [ Initialization, CICD ]
-    if: (!cancelled()) && (!failure()) && (needs.Initialization.outputs.environmentCount > 0)
+    needs: [ Initialization ]
+    if: needs.Initialization.outputs.environmentCount > 0
     strategy: ${{ fromJson(needs.Initialization.outputs.environments) }}
     runs-on: ${{ fromJson(matrix.os) }}
     name: Deploy to ${{ matrix.environment }}
