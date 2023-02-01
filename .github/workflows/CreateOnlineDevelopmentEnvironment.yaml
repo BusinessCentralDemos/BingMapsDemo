@@ -15,7 +15,7 @@ on:
         required: false
         default: 'N'
 
-run-name: Create Online Dev. Environment - open for manual interaction
+run-name: Create Online Dev. Environment - open details for manual interaction
 
 permissions:
   contents: write
