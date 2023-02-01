@@ -33,7 +33,8 @@ jobs:
       settings: ${{ steps.ReadSettings.outputs.SettingsJson }}
       environments: ${{ steps.ReadSettings.outputs.EnvironmentsJson }}
       environmentCount: ${{ steps.ReadSettings.outputs.EnvironmentCount }}
-      runCICD: ${{ steps.runCICD.outputs.runCICD }}
+      runCICD: ${{ steps.Authenticate.outputs.runCICD }}
+      singleAuthContext: ${{ steps.Authenticate.outputs.singleAuthContext }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -74,17 +75,42 @@ jobs:
           settingsJson: ${{ env.Settings }}
           secrets: '${{ steps.envName.outputs.envName }}-AuthContext,${{ steps.envName.outputs.envName }}_AuthContext,AuthContext'
 
-      - name: runCICD
-        id: runCICD
+      - name: Authenticate
+        id: Authenticate
+        env:
+          encryptionKeyStr: ${{ secrets.ALGoEncryptionKey }}
         if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
-          Write-Host 'DOIT ${{ steps.envName.outputs.envName }}'
-          if ('${{ steps.envName.outputs.envName }}' -eq 'xxx') {
-            Add-Content -Path $ENV:GITHUB_OUTPUT -value "runCICD=true"
+          $secretName = ''
+          $authContext = $null
+          "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
+            if (!($authContext)) {
+              $authContext = [System.Environment]::GetEnvironmentVariable($_)
+              if ($authContext) {
+                Write-Host "Using $_ secret as AuthContext"
+                $secretName = $_
+              }
+            }            
+          }
+          if ($authContext) {
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]), using authentication context from secret $secretName"
           }
           else {
-            Add-Content -Path $ENV:GITHUB_OUTPUT -value "runCICD=false"
+            Write-Host "No AuthContext provided, initiating Device Code flow"
+            $ALGoHelperPath = "$([System.IO.Path]::GetTempFileName()).ps1"
+            $webClient = New-Object System.Net.WebClient
+            $webClient.DownloadFile('https://raw.githubusercontent.com/freddydk/AL-Go-Actions/main/AL-Go-Helper.ps1', $ALGoHelperPath)
+            . $ALGoHelperPath
+            $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
+            $authContext = New-BcAuthContext -includeDeviceLogin -deviceLoginTimeout ([TimeSpan]::FromSeconds(0))
+            MaskValueInLog -value $authContext.deviceCode
+            $authContext = "{""deviceCode"":""$($authContext.deviceCode)""}"
+            CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]) and could not locate a secret called ${{ steps.envName.outputs.envName }}_AuthContext`n`n$authContext.message"
           }
+          $secStr = ConvertTo-SecureString -String $authContext -AsPlainText -Force
+          $encStr = ConvertFrom-SecureString -SecureString $secStr -Key $encryptionKey
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "singleAuthContext=$encStr"
 
   CICD:
     needs: [ Initialization ]
@@ -100,6 +126,9 @@ jobs:
     name: Deploy to ${{ matrix.environment }}
     environment:
       name: ${{ matrix.environment }}
+    env:
+      singleAuthContext: ${{ needs.Initialization.outputs.singleAuthContext }}
+      encryptionKeyStr: ${{ secrets.ALGoEncryptionKey }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -140,6 +169,10 @@ jobs:
             $deployToSetting = [PSCustomObject]@{}
           }
           $authContext = $null
+          if ($env:singleAuthContext -and $env:encryptionKeyStr) {
+            $encryptionKey = [System.Convert]::FromBase64String($encryptionKeyStr)
+            $authContext = ConvertTo-SecureString -String $singleAuthContext -Key $encryptionKey | Get-PlainText
+          }
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
               $authContext = [System.Environment]::GetEnvironmentVariable($_)
