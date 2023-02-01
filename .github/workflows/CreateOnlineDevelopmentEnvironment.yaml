@@ -82,7 +82,7 @@ jobs:
             $adminCenterApiCredentials = "{""deviceCode"":""$($authContext.deviceCode)""}"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "adminCenterApiCredentials=$([Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($adminCenterApiCredentials)))"
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
-            Set-Content -Path $ENV:GITHUB_SUMMARY -value 'Please open https://aka.ms/devicelogin, specify the code $($authContext.deviceCode) and login with your Business Central Admin Center Credentials'
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value 'Please open https://aka.ms/devicelogin, specify the code $($authContext.deviceCode) and login with your Business Central Admin Center Credentials'
           }
 
   CreateDevelopmentEnvironment:
