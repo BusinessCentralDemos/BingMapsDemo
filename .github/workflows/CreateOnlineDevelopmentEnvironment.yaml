@@ -30,7 +30,7 @@ env:
   ALGoRepoSettings: ${{ vars.ALGoRepoSettings }}
 
 jobs:
-  Authentication:
+  Authenticate:
     runs-on: [ windows-latest ]
     outputs:
       adminCenterApiCredentials: ${{ steps.authenticate.outputs.adminCenterApiCredentials }}
@@ -82,7 +82,6 @@ jobs:
             $authContext = New-BcAuthContext -includeDeviceLogin -deviceLoginTimeout ([TimeSpan]::FromSeconds(0))
             $adminCenterApiCredentials = "{""deviceCode"":""$($authContext.deviceCode)""}"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "adminCenterApiCredentials=$([Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($adminCenterApiCredentials)))"
-            MaskValueInLog -value $($authContext.deviceCode)
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
             Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value $authContext.message
           }
