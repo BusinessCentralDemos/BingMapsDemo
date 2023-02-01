@@ -53,7 +53,7 @@ jobs:
 
       - name: EnvName
         id: envName
-        if: step.ReadSettings.outputs.EnvironmentCount == 1
+        if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
           $ErrorActionPreference = "STOP"
           Set-StrictMode -version 2.0
@@ -62,7 +62,7 @@ jobs:
 
       - name: Read secrets
         uses: freddydk/AL-Go-Actions/ReadSecrets@authflow
-        if: step.ReadSettings.outputs.EnvironmentCount == 1
+        if: steps.ReadSettings.outputs.EnvironmentCount == 1
         env:
           secrets: ${{ toJson(secrets) }}
         with:
@@ -73,7 +73,7 @@ jobs:
 
       - name: Authenticate
         id: Authenticate
-        if: step.ReadSettings.outputs.EnvironmentCount == 1
+        if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
           Write-Host "DOIT"
 
