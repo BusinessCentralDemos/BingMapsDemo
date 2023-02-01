@@ -176,7 +176,9 @@ jobs:
           if ($env:singleAuthContext -and $env:encryptionKeyStr) {
             $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
             $secStr = ConvertTo-SecureString -String $env:singleAuthContext -Key $encryptionKey
-            $authContext = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secStr))
+            $plainStr = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secStr))
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($plainStr)
+            $authContext = [System.Convert]::ToBase64String($bytes)
           }
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
@@ -229,7 +231,6 @@ jobs:
             $projects = ($projects.Split(',') | Where-Object { $buildProjects -contains $_ }) -join ','
           }
           Add-Content -Path $env:GITHUB_OUTPUT -Value "authContext=$authContext"
-          Write-Host "authContext=$authContext"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "environmentName=$environmentName"
           Write-Host "environmentName=$([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($environmentName)))"
           Write-Host "environmentName (as Base64)=$environmentName"
