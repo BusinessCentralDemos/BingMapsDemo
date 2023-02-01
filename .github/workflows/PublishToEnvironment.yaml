@@ -82,6 +82,7 @@ jobs:
         if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
           $secretName = ''
+          $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
           $authContext = $null
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
@@ -168,7 +169,6 @@ jobs:
           else {
             $deployToSetting = [PSCustomObject]@{}
           }
-          $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
           $authContext = $null
           if ($env:singleAuthContext -and $env:encryptionKeyStr) {
             $encryptionKey = [System.Convert]::FromBase64String($encryptionKeyStr)
