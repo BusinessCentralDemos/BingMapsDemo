@@ -89,15 +89,15 @@ jobs:
   CreateDevelopmentEnvironment:
     runs-on: [ windows-latest ]
     name: Create Development Environment
-    needs: [ Authentication ]
+    needs: [ Authenticate ]
     env:
-      adminCenterApiCredentials: ${{ needs.Authentication.outputs.adminCenterApiCredentials }}
+      adminCenterApiCredentials: ${{ needs.Authenticate.outputs.adminCenterApiCredentials }}
     steps:
       - name: Create Development Environment
         uses: microsoft/AL-Go-Actions/CreateDevelopmentEnvironment@preview
         with:
           shell: powershell
-          parentTelemetryScopeJson: ${{ needs.Authentication.outputs.telemetryScopeJson }}
+          parentTelemetryScopeJson: ${{ needs.Authenticate.outputs.telemetryScopeJson }}
           environmentName: ${{ github.event.inputs.environmentName }}
           reUseExistingEnvironment: ${{ github.event.inputs.reUseExistingEnvironment }}
           directCommit: ${{ github.event.inputs.directCommit }}
@@ -109,4 +109,4 @@ jobs:
         with:
           shell: powershell
           eventId: "DO0093"
-          telemetryScopeJson: ${{ needs.Authentication.outputs.telemetryScopeJson }}
+          telemetryScopeJson: ${{ needs.Authenticate.outputs.telemetryScopeJson }}
