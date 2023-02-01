@@ -26,6 +26,10 @@ env:
   ALGoRepoSettings: ${{ vars.ALGoRepoSettings }}
 
 jobs:
+  CICD:
+    uses: BusinessCentralDemos/BingMapsDemo/.github/workflows/CICD.yaml@main
+    secrets: inherit
+
   Initialization:
     runs-on: [ windows-latest ]
     outputs:
