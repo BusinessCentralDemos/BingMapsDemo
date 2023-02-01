@@ -73,6 +73,7 @@ jobs:
           $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
           if ($adminCenterApiCredentials) {
             Write-Host "AdminCenterApiCredentials provided!"
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "Admin Center Api Credentials was provided in a secret called $($ENV:adminCenterApiCredentialsSecretName). Using this information for authentication."
           }
           else {
             Write-Host "AdminCenterApiCredentials not provided, initiating Device Code flow"
@@ -85,7 +86,7 @@ jobs:
             MaskValueInLog -value $authContext.deviceCode
             $adminCenterApiCredentials = "{""deviceCode"":""$($authContext.deviceCode)""}"
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
-            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value $authContext.message
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Admin Center Api and could not locate a secret called $($ENV:adminCenterApiCredentialsSecretName) (https://aka.ms/ALGoSettings#AdminCenterApiCredentialsSecretName)`n`n$authContext.message"
           }
           $secStr = ConvertTo-SecureString -String $adminCenterApiCredentials -AsPlainText -Force
           $encStr = ConvertFrom-SecureString -SecureString $secStr -Key $encryptionKey
