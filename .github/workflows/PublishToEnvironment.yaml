@@ -175,7 +175,8 @@ jobs:
           $authContext = $null
           if ($env:singleAuthContext -and $env:encryptionKeyStr) {
             $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
-            $authContext = ConvertTo-SecureString -String $env:singleAuthContext -Key $encryptionKey | Get-PlainText
+            $secStr = ConvertTo-SecureString -String $env:singleAuthContext -Key $encryptionKey
+            $authContext = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secStr))
           }
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
