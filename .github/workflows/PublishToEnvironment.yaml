@@ -59,10 +59,11 @@ jobs:
         run: |
           $ErrorActionPreference = "STOP"
           Set-StrictMode -version 2.0
-          $json = '${{ steps.ReadSettings.outputs.environments }}' | ConvertFrom-Json
+          $json = '${{ steps.ReadSettings.outputs.environmentsJson }}' | ConvertFrom-Json
           $json | Out-Host
           $json | ConvertTo-Json -depth 99 | Out-Host
           $envName = $json.matrix.include[0].environment.split(' ')[0]
+          '${{ fromJson(steps.ReadSettings.outputs.environmentsJson).matrix.include[0].environment }}' | ConvertFrom-Json
           Add-Content -Path $env:GITHUB_OUTPUT -Value "envName=$envName"
 
       - name: Read secrets
