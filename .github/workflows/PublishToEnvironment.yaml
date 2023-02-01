@@ -94,7 +94,7 @@ jobs:
 
   Deploy:
     needs: [ Initialization, CICD ]
-    if: needs.Initialization.outputs.environmentCount > 0
+    if: (!cancelled()) && (!failure()) && (needs.Initialization.outputs.environmentCount > 0)
     strategy: ${{ fromJson(needs.Initialization.outputs.environments) }}
     runs-on: ${{ fromJson(matrix.os) }}
     name: Deploy to ${{ matrix.environment }}
