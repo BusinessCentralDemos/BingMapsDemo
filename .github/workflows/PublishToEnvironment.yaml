@@ -11,6 +11,8 @@ on:
         description: Environment mask to receive the new version (* for all, PROD* for all environments starting with PROD)
         required: true
 
+run-name: Publish to environment - open details for manual interaction
+
 permissions:
   contents: read
   actions: read
