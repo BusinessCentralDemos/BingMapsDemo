@@ -26,10 +26,6 @@ env:
   ALGoRepoSettings: ${{ vars.ALGoRepoSettings }}
 
 jobs:
-  CICD:
-    uses: BusinessCentralDemos/BingMapsDemo/.github/workflows/CICD.yaml@main
-    secrets: inherit
-
   Initialization:
     runs-on: [ windows-latest ]
     outputs:
@@ -37,6 +33,7 @@ jobs:
       settings: ${{ steps.ReadSettings.outputs.SettingsJson }}
       environments: ${{ steps.ReadSettings.outputs.EnvironmentsJson }}
       environmentCount: ${{ steps.ReadSettings.outputs.EnvironmentCount }}
+      runCICD: ${{ steps.runCICD.outputs.runCICD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -77,15 +74,26 @@ jobs:
           settingsJson: ${{ env.Settings }}
           secrets: '${{ steps.envName.outputs.envName }}-AuthContext,${{ steps.envName.outputs.envName }}_AuthContext,AuthContext'
 
-      - name: Authenticate
-        id: Authenticate
+      - name: runCICD
+        id: runCICD
         if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
           Write-Host 'DOIT ${{ steps.envName.outputs.envName }}'
+          if ('${{ steps.envName.outputs.envName }}' -eq 'xxx') {
+            Add-Content -Path $ENV:GITHUB_OUTPUT -value "runCICD=true"
+          }
+          else {
+            Add-Content -Path $ENV:GITHUB_OUTPUT -value "runCICD=false"
+          }
 
+  CICD:
+    needs: [ Initialization ]
+    if: needs.Initialization.outputs.runCICD == 'true'
+    uses: BusinessCentralDemos/BingMapsDemo/.github/workflows/CICD.yaml@main
+    secrets: inherit
 
   Deploy:
-    needs: [ Initialization ]
+    needs: [ Initialization, CICD ]
     if: needs.Initialization.outputs.environmentCount > 0
     strategy: ${{ fromJson(needs.Initialization.outputs.environments) }}
     runs-on: ${{ fromJson(matrix.os) }}
