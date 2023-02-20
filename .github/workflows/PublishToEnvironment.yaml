@@ -82,6 +82,7 @@ jobs:
           encryptionKeyStr: ${{ secrets.ALGoEncryptionKey }}
         if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
+          $envName = '${{ steps.envName.outputs.envName }}'
           $secretName = ''
           $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
           $authContext = $null
@@ -98,7 +99,7 @@ jobs:
             Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]), using authentication context from secret $secretName"
           }
           else {
-            Write-Host "No AuthContext provided, initiating Device Code flow"
+            Write-Host "No AuthContext provided for $envName, initiating Device Code flow"
             $ALGoHelperPath = "$([System.IO.Path]::GetTempFileName()).ps1"
             $webClient = New-Object System.Net.WebClient
             $webClient.DownloadFile('https://raw.githubusercontent.com/freddydk/AL-Go-Actions/main/AL-Go-Helper.ps1', $ALGoHelperPath)
