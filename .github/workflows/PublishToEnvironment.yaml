@@ -97,7 +97,7 @@ jobs:
           }
           if ($authContext) {
             Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]), using authentication context from secret $secretName"
-            $authContext = [Convert]::FromBase64String($authContext)
+            $authContext =  [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($authContext))
           }
           else {
             Write-Host "No AuthContext provided for $envName, initiating Device Code flow"
