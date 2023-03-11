@@ -114,10 +114,10 @@ jobs:
       - name: Set AdminCenterApiCredentials
         run: |
           if ($env:deviceCode) {
-            $adminCenterApiCredentials = "{""deviceCode"":""$($env:deviceCode)""}"
+            $adminCenterApiCredentials = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("{""deviceCode"":""$($env:deviceCode)""}"))
           }
           else {
-            $adminCenterApiCredentials = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:adminCenterApiCredentials))
+            $adminCenterApiCredentials = "$env:adminCenterApiCredentials"
           }
           Add-Content -path $env:GITHUB_ENV -value "adminCenterApiCredentials2=$adminCenterApiCredentials"
 
