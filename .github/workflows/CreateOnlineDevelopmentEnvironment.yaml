@@ -119,6 +119,7 @@ jobs:
           else {
             $adminCenterApiCredentials = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:adminCenterApiCredentials))
           }
+          Add-Content -path $env:GITHUB_ENV -value "adminCenterApiCredentials2=$adminCenterApiCredentials"
 
       - name: Create Development Environment
         uses: freddydk/AL-Go-Actions/CreateDevelopmentEnvironment@authflow
@@ -128,7 +129,7 @@ jobs:
           environmentName: ${{ github.event.inputs.environmentName }}
           reUseExistingEnvironment: ${{ github.event.inputs.reUseExistingEnvironment }}
           directCommit: ${{ github.event.inputs.directCommit }}
-          adminCenterApiCredentials: ${{ env.adminCenterApiCredentials }}
+          adminCenterApiCredentials: ${{ env.adminCenterApiCredentials2 }}
 
       - name: Finalize the workflow
         if: always()
