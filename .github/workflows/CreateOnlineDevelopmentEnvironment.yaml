@@ -90,7 +90,7 @@ jobs:
     name: Create Development Environment
     needs: [ Initialize ]
     env:
-      $deviceCode: ${{ needs.Initialize.outputs.deviceCode }}
+      deviceCode: ${{ needs.Initialize.outputs.deviceCode }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
