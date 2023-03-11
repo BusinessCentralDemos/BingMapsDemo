@@ -35,7 +35,7 @@ jobs:
       settings: ${{ steps.ReadSettings.outputs.SettingsJson }}
       environments: ${{ steps.ReadSettings.outputs.EnvironmentsJson }}
       environmentCount: ${{ steps.ReadSettings.outputs.EnvironmentCount }}
-      singleAuthContext: ${{ steps.Authenticate.outputs.singleAuthContext }}
+      deviceCode: ${{ steps.Authenticate.outputs.deviceCode }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3

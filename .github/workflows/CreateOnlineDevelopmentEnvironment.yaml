@@ -33,7 +33,7 @@ jobs:
   Initialize:
     runs-on: [ windows-latest ]
     outputs:
-      adminCenterApiCredentials: ${{ steps.authenticate.outputs.adminCenterApiCredentials }}
+      deviceCode: ${{ steps.authenticate.outputs.deviceCode }}
       telemetryScopeJson: ${{ steps.init.outputs.telemetryScopeJson }}
     steps:
       - name: Checkout
