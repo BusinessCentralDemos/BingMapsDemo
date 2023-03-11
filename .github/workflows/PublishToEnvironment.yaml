@@ -92,7 +92,11 @@ jobs:
               }
             }            
           }
-          if (-not ($authContext)) {
+          if ($authContext) {
+            Write-Host "AuthContext provided in secret $secretName!"
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AuthContext was provided in a secret called $secretName. Using this information for authentication."
+          }
+          else {
             Write-Host "No AuthContext provided for $envName, initiating Device Code flow"
             $ALGoHelperPath = "$([System.IO.Path]::GetTempFileName()).ps1"
             $webClient = New-Object System.Net.WebClient
@@ -100,15 +104,9 @@ jobs:
             . $ALGoHelperPath
             $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
             $authContext = New-BcAuthContext -includeDeviceLogin -deviceLoginTimeout ([TimeSpan]::FromSeconds(0))
-            $message = $authContext.message
-            $authContext = "{""deviceCode"":""$($authContext.deviceCode)""}"
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
-            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]) and could not locate a secret called ${{ steps.envName.outputs.envName }}_AuthContext`n`n$message"
-            # GitHub wrongly sees deviceCode as a secret and blocks the output unless we encrypt it
-            # Using a fixed password
-            $secStr = ConvertTo-SecureString -String $authContext -AsPlainText -Force
-            $encStr = ConvertFrom-SecureString -SecureString $secStr -Key ([Byte[]]@(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16))
-            Add-Content -Path $env:GITHUB_OUTPUT -Value "singleAuthContext=$authContext"
+            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]) and could not locate a secret called ${{ steps.envName.outputs.envName }}_AuthContext`n`n$($authContext.message)"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "deviceCode=$($authContext.deviceCode)"
           }
 
   Deploy:
@@ -120,7 +118,7 @@ jobs:
     environment:
       name: ${{ matrix.environment }}
     env:
-      singleAuthContext: ${{ needs.Initialization.outputs.singleAuthContext }}
+      deviceCode: ${{ needs.Initialization.outputs.deviceCode }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -161,11 +159,8 @@ jobs:
             $deployToSetting = [PSCustomObject]@{}
           }
           $authContext = $null
-          if ($env:singleAuthContext) {
-            $secStr = ConvertTo-SecureString -String $env:singleAuthContext -Key ([Byte[]]@(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16))
-            $plainStr = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secStr))
-            $bytes = [System.Text.Encoding]::UTF8.GetBytes($plainStr)
-            $authContext = [System.Convert]::ToBase64String($bytes)
+          if ($env:deviceCode) {
+            $authContext = "{""deviceCode"":""$($env:deviceCode)""}"
           }
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
