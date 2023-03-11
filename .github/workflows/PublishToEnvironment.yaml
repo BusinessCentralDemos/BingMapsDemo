@@ -108,6 +108,7 @@ jobs:
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
             Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]) and could not locate a secret called ${{ steps.envName.outputs.envName }}_AuthContext`n`n$message"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "singleAuthContext=$([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($authContext)))"
+          }
 
   Deploy:
     needs: [ Initialization ]
