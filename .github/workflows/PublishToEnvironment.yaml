@@ -78,13 +78,11 @@ jobs:
 
       - name: Authenticate
         id: Authenticate
-        env:
-          encryptionKeyStr: ${{ secrets.ALGoEncryptionKey }}
         if: steps.ReadSettings.outputs.EnvironmentCount == 1
         run: |
           $envName = '${{ steps.envName.outputs.envName }}'
           $secretName = ''
-          $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
+          # Check whether authcontext exists for single environment
           $authContext = $null
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
@@ -95,11 +93,7 @@ jobs:
               }
             }            
           }
-          if ($authContext) {
-            Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]), using authentication context from secret $secretName"
-            $authContext =  [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($authContext))
-          }
-          else {
+          if (-not ($authContext)) {
             Write-Host "No AuthContext provided for $envName, initiating Device Code flow"
             $ALGoHelperPath = "$([System.IO.Path]::GetTempFileName()).ps1"
             $webClient = New-Object System.Net.WebClient
@@ -110,12 +104,10 @@ jobs:
             MaskValueInLog -value $authContext.deviceCode
             $message = $authContext.message
             $authContext = "{""deviceCode"":""$($authContext.deviceCode)""}"
+            Write-Host $authContext           
             CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
             Set-Content -Path $ENV:GITHUB_STEP_SUMMARY -value "AL-Go needs access to the Business Central Environment $('${{ steps.envName.outputs.envName }}'.Split(' ')[0]) and could not locate a secret called ${{ steps.envName.outputs.envName }}_AuthContext`n`n$message"
-          }
-          $secStr = ConvertTo-SecureString -String $authContext -AsPlainText -Force
-          $encStr = ConvertFrom-SecureString -SecureString $secStr -Key $encryptionKey
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "singleAuthContext=$encStr"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "singleAuthContext=$([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($authContext)))"
 
   Deploy:
     needs: [ Initialization ]
@@ -127,7 +119,6 @@ jobs:
       name: ${{ matrix.environment }}
     env:
       singleAuthContext: ${{ needs.Initialization.outputs.singleAuthContext }}
-      encryptionKeyStr: ${{ secrets.ALGoEncryptionKey }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -168,12 +159,8 @@ jobs:
             $deployToSetting = [PSCustomObject]@{}
           }
           $authContext = $null
-          if ($env:singleAuthContext -and $env:encryptionKeyStr) {
-            $encryptionKey = [System.Convert]::FromBase64String($env:encryptionKeyStr)
-            $secStr = ConvertTo-SecureString -String $env:singleAuthContext -Key $encryptionKey
-            $plainStr = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secStr))
-            $bytes = [System.Text.Encoding]::UTF8.GetBytes($plainStr)
-            $authContext = [System.Convert]::ToBase64String($bytes)
+          if ($env:singleAuthContext) {
+            $authContext = $env:singleAuthContext
           }
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
