@@ -11,13 +11,9 @@ on:
         description: Environment mask to receive the new version (* for all, PROD* for all environments starting with PROD)
         required: true
 
-run-name: Publish to environment - open details for manual interaction
-
 permissions:
   contents: read
   actions: read
-  pull-requests: write
-  checks: write
 
 defaults:
   run:
@@ -100,7 +96,7 @@ jobs:
             Write-Host "No AuthContext provided for $envName, initiating Device Code flow"
             $ALGoHelperPath = "$([System.IO.Path]::GetTempFileName()).ps1"
             $webClient = New-Object System.Net.WebClient
-            $webClient.DownloadFile('https://raw.githubusercontent.com/freddydk/AL-Go-Actions/main/AL-Go-Helper.ps1', $ALGoHelperPath)
+            $webClient.DownloadFile('https://raw.githubusercontent.com/freddydk/AL-Go-Actions/authflow/AL-Go-Helper.ps1', $ALGoHelperPath)
             . $ALGoHelperPath
             $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
             $authContext = New-BcAuthContext -includeDeviceLogin -deviceLoginTimeout ([TimeSpan]::FromSeconds(0))
@@ -180,7 +176,7 @@ jobs:
           else {
             $environmentName = $null
             "$($envName)-EnvironmentName", "$($envName)_EnvironmentName", "EnvironmentName" | ForEach-Object {
-              if (!($environmentName)) {
+              if (!($EnvironmentName)) {
                 $EnvironmentName = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String([System.Environment]::GetEnvironmentVariable($_)))
                 if ($EnvironmentName) {
                   Write-Host "Using $_ secret as EnvironmentName"
