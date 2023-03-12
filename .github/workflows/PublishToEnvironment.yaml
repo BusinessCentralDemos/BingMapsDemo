@@ -160,7 +160,7 @@ jobs:
           }
           $authContext = $null
           if ($env:deviceCode) {
-            $authContext = "{""deviceCode"":""$($env:deviceCode)""}"
+            $authContext = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("{""deviceCode"":""$($env:deviceCode)""}"))
           }
           "$($envName)-AuthContext", "$($envName)_AuthContext", "AuthContext" | ForEach-Object {
             if (!($authContext)) {
